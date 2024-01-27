@@ -7,6 +7,7 @@ const userSchema = new mongoose.Schema({
     unique: [true, "Username already taken"],
   },
   password: { type: String },
+  score: { type: Number, default: 0 },
 })
 
 const User = mongoose.model("User", userSchema)
