@@ -2,7 +2,7 @@ const { Request, Response } = require("express")
 const User = require("../models/auth_user")
 const Image = require("../models/image")
 const jwt = require("jsonwebtoken")
-// const { uploadToCloudinary } = require("../helpers/upload")
+const { uploadToCloudinary } = require("../helpers/upload")
 const cloudinary = require("cloudinary").v2
 /**
  *
@@ -34,12 +34,12 @@ const uploadImage = async (req, res) => {
     req.headers["x-access-token"],
     process.env.JWT_SECRET
   )
-  if (!decoded){
+  if (!decoded) {
     return res.status(401).json({ error: "Unauthorized" })
   }
   console.log(decoded)
   //We use the username to find the user id
-  const userId = await User.findOne() 
+  const userId = await User.findOne()
     .where("username")
     .equals(decoded.username)
     .select("_id")
@@ -52,10 +52,8 @@ const uploadImage = async (req, res) => {
   }
 
   try {
-
-    console.log(req.file)
-    const imageToUpload = req.file;  
-    const uploadUrl = await cloudinary.uploader.upload(imageToUpload.path);
+    const imageToUpload = req.file
+    const uploadUrl = await uploadToCloudinary(req.file.buffer)
 
     let image = new Image({
       image: uploadUrl,
@@ -82,7 +80,7 @@ const deleteImage = async (req, res) => {
     req.headers["x-access-token"],
     process.env.JWT_SECRET
   )
-  if (!decoded){
+  if (!decoded) {
     return res.status(401).json({ error: "Unauthorized" })
   }
   const userId = await User.findOne() //We use the username to find the user id
@@ -141,7 +139,7 @@ const likeImage = async (req, res) => {
     req.headers["x-access-token"],
     process.env.JWT_SECRET
   )
-  if (!decoded){
+  if (!decoded) {
     return res.status(401).json({ error: "Unauthorized" })
   }
   const userId = await User.findOne() //We use the username to find the user id
@@ -176,7 +174,6 @@ const likeImage = async (req, res) => {
     //TODO: Also need to increment the score of the current user by 1
     await Image.save()
     res.status(200).send({ message: "success" })
-    
   } catch (e) {
     console.error(e)
     return res.status(500).json({ message: "Service Error" })
