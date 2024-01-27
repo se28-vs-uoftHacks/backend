@@ -1,3 +1,6 @@
+const multer = require("multer");
+const upload = multer();
+
 const {
   getImages,
   uploadImage,
@@ -12,7 +15,7 @@ const imagesRouter = express.Router()
 // Need to pass user token in x-access-token
 imagesRouter.get("/", getImages)
 imagesRouter.delete("/:imageId", deleteImage)
-imagesRouter.post("/upload", uploadImage)
+imagesRouter.post("/upload", upload.single("image"), uploadImage)
 imagesRouter.put("/like/:imageId", likeImage)
 module.exports = {
   imagesRouter,

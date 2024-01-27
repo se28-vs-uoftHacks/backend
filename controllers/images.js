@@ -2,7 +2,7 @@ const { Request, Response } = require("express")
 const User = require("../models/auth_user")
 const Image = require("../models/image")
 const jwt = require("jsonwebtoken")
-const { uploadToCloudinary } = require("../helpers/upload")
+// const { uploadToCloudinary } = require("../helpers/upload")
 const cloudinary = require("cloudinary").v2
 /**
  *
@@ -52,9 +52,10 @@ const uploadImage = async (req, res) => {
   }
 
   try {
-    const imageToUpload = req.file.buffer
-    //upload image to cloudinary
-    const uploadUrl = await uploadToCloudinary(imageToUpload)
+
+    console.log(req.file)
+    const imageToUpload = req.file;  
+    const uploadUrl = await cloudinary.uploader.upload(imageToUpload.path);
 
     let image = new Image({
       image: uploadUrl,
