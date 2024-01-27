@@ -5,6 +5,7 @@ const cors = require("cors")
 const bodyParser = require("body-parser")
 require("dotenv").config();
 const { configureLibs } = require("./helpers/setup");
+const { authRouter } = require("./routes/users");
 
 configureLibs().then(()=>console.log("success configuring libraries!")).catch((e) => console.error(e));
 const app = express()
@@ -16,6 +17,9 @@ app.use(
 )
 //Parse the body as json everytime we receive a request
 app.use(bodyParser.json())
+
+//User auth
+app.use("/users", authRouter);
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`)
