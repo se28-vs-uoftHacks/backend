@@ -8,6 +8,7 @@ const userSchema = new mongoose.Schema({
   },
   password: { type: String },
   score: { type: Number, default: 0 },
+  profileIcon: { type: Number, default: 1 }, //goes from 1 to 25 (number of sprites we have)
 })
 
 const User = mongoose.model("User", userSchema)

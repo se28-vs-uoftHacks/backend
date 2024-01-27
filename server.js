@@ -7,7 +7,7 @@ require("dotenv").config()
 const { configureLibs } = require("./helpers/setup")
 const { authRouter } = require("./routes/users")
 const { imagesRouter } = require("./routes/images");
-// const { dashboardRouter } = require("./routes/images");
+const { dashboardRouter } = require("./routes/dashboard");
 
 configureLibs()
   .then(() => console.log("success configuring libraries!"))
@@ -25,7 +25,7 @@ app.use(bodyParser.json())
 //User auth
 app.use("/users", authRouter)
 app.use("/images", imagesRouter);
-// app.use("/dashboard", dashboardRouter);
+app.use("/dashboard", dashboardRouter);
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`)
