@@ -14,5 +14,5 @@ imagesRouter.delete("/:imageId", deleteImage)
 imagesRouter.post("/upload", uploadImage)
 imagesRouter.put("/like/:imageId", likeImage)
 module.exports = {
-  imageRouter,
+  imagesRouter,
 }
