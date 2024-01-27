@@ -1,9 +1,9 @@
 const mongoose = require("mongoose")
-//generate profile picture down the line
 
 const imageSchema = new mongoose.Schema({
   owner_id: { type: String },
   likes: { type: Number, default: 0 },
+  liked_by: { type: Array, default: [] },
   image: { type: String },
 })
 
