@@ -6,6 +6,7 @@ const {
   uploadImage,
   deleteImage,
   likeImage,
+  unlikeImage,
 } = require("../controllers/images")
 
 const express = require("express")
@@ -17,6 +18,7 @@ imagesRouter.get("/", getImages)
 imagesRouter.delete("/:imageId", deleteImage)
 imagesRouter.post("/upload", upload.single("image"), uploadImage)
 imagesRouter.put("/like/:imageId", likeImage)
+imagesRouter.put("/unlike/:imageId", unlikeImage)
 module.exports = {
   imagesRouter,
 }

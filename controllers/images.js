@@ -45,7 +45,8 @@ const getImages = async (req, res) => {
       images.map(async (image) => {
         // Add isOwner field
         let newImageObject = { ...image }
-        newImageObject.isOwner = image.owner_id.toString() == userId._id.toString()
+        newImageObject.isOwner =
+          image.owner_id.toString() == userId._id.toString()
 
         // Fetch profileIcon from User model
         const user = await User.findById(image.owner_id).select("profileIcon")
@@ -193,27 +194,83 @@ const likeImage = async (req, res) => {
   try {
     let Image = await Image.findOne().where("_id").equals(imageId).exec()
 
-    //Ensures there is a found image
-    if (!Image) {
-      return res.status(404).json({ error: "Image Not Found" })
-    }
-
     //Ensures that users do not like their own images
     if (Image.owner_id.toString() == userId._id.toString()) {
       return res.status(401).json({ error: "Unauthorized Like of Own image" })
     }
 
-    Image["likes"] = Image["likes"] + 1
-    //liked_by field has the token of the one who liked it
-    Image["liked_by"] = req.headers["x-access-token"]
-
-    //Increment the score of the owner of the liked image by 1
-    const owner = await User.findOneAndUpdate(
-        { _id: image.owner_id },
-        { $inc: { score: 1 } }
+    //To increment the score of the image by 1
+    let updatedImage = await Image.findOneAndUpdate(
+      { _id: imageId },
+      {
+        $inc: { likes: 1 },
+        $push: { liked_by: req.headers["x-access-token"] },
+      },
+      { new: true } // Optional: Return the updated document
     )
 
-    await Image.save()
+    //Increment the score of the owner of the liked image by 1
+    let updatedUser = await User.findOneAndUpdate(
+      { _id: image.owner_id },
+      { $inc: { score: 1 } },
+      { new: true }
+    )
+
+    res.status(200).send({ message: "success" })
+  } catch (e) {
+    console.error(e)
+    return res.status(500).json({ message: "Service Error" })
+  }
+}
+
+// Decrements the likes of an image by 1
+// remove the token from the liked_by field
+// decrements the score on the owner of the image by 1
+// On the frontend: only allow users to like an image once
+const unlikeImage = async (req, res) => {
+  const decoded = jwt.decode(
+    req.headers["x-access-token"],
+    process.env.JWT_SECRET
+  )
+  if (!decoded) {
+    return res.status(401).json({ error: "Unauthorized" })
+  }
+  const userId = await User.findOne() //We use the username to find the user id
+    .where("username")
+    .equals(decoded.username)
+    .select("_id")
+    .exec()
+
+  const { imageId } = req.params
+
+  if (!imageId) {
+    return res.status(401).json({ error: "No Item Selected" })
+  }
+
+  try {
+    let Image = await Image.findOne().where("_id").equals(imageId).exec()
+
+    //Ensures that users do not unlike their own images
+    if (Image.owner_id.toString() == userId._id.toString()) {
+      return res.status(401).json({ error: "Unauthorized Like of Own image" })
+    }
+
+    //To decrement the likes of the image by 1
+    let updatedImage = await Image.findOneAndUpdate(
+      { _id: imageId },
+      {
+        $inc: { likes: -1 },
+        $pull: { liked_by: req.headers["x-access-token"] },
+      },
+      { new: true } // Optional: Return the updated document
+    )
+
+    //Decrement the score of the owner of the liked image by 1
+    const updatedUser = await User.findOneAndUpdate(
+      { _id: image.owner_id },
+      { $inc: { score: -1 } }
+    )
+
     res.status(200).send({ message: "success" })
   } catch (e) {
     console.error(e)
@@ -226,4 +283,5 @@ module.exports = {
   getImages,
   deleteImage,
   likeImage,
+  unlikeImage,
 }
