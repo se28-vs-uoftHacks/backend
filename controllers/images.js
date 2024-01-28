@@ -12,13 +12,50 @@ const cloudinary = require("cloudinary").v2
  */
 
 // Sends all images in the collection
-// TODO: Tag each image with isOwned (after retrieving from mongoDB),
-// so the frontend can know which images are owned by the current user
+// Tags each image with isOwned (after retrieving from mongoDB), and 
+// adds the profileIcon to the image objects for the frontend to use
 const getImages = async (req, res) => {
+  // Decoding user's username from the token
+  const decoded = jwt.decode(
+    req.headers["x-access-token"],
+    process.env.JWT_SECRET
+  )
+  if (!decoded) {
+    return res.status(401).json({ error: "Unauthorized" })
+  }
+  const userId = await User.findOne()
+    .where("username")
+    .equals(decoded.username)
+    .select("_id")
+    .exec()
+  console.log(userId)
+  if (userId == null) {
+    return res
+      .status(404)
+      .send({ message: "Not logged in. Please Login again" })
+  }
+
   try {
     const images = await Image.find()
-    console.log(images)
-    // TODO: add the isOwned tag here
+
+    // Loop through images and add isOwned field
+    images.forEach(async (image) => {
+      if (image.owner_id.toString() === userId.toString()) {
+        image.isOwned = true
+      } else {
+        image.isOwned = false
+      }
+      //add the profileIcon to the image objects
+      const profileIcon = await User.findOne()
+        .where("_id")
+        .equals(image.owner_id)
+        .select("profileIcon")
+        .exec()
+
+        image.profileIcon = profileIcon
+    })
+
+    console.log("images", images)
 
     return res.status(200).send({ images })
   } catch (e) {
@@ -72,6 +109,7 @@ const uploadImage = async (req, res) => {
 
 // Deletes an image from the collection
 // TODO ON THE FRONTEND: Ensure only the owner of the image can delete it.
+// (with the isOwned field)
 const deleteImage = async (req, res) => {
   console.log("Delete!")
 
