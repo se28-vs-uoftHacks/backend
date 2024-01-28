@@ -12,9 +12,9 @@ const leaderBoard = async (req, res) => {
   try {
     const users = await User.find()
 
-    // I want to sort users by their score in ascending order
+    // I want to sort users by their score in descending order
     users.sort((a, b) => {
-        return a.score - b.score;
+        return b.score - a.score;
     });
 
     return res.status(200).send({ users })

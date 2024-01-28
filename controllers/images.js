@@ -12,7 +12,7 @@ const cloudinary = require("cloudinary").v2
  */
 
 // Sends all images in the collection
-// Tags each image with isOwned (after retrieving from mongoDB), and 
+// Tags each image with isOwned (after retrieving from mongoDB), and
 // adds the profileIcon to the image objects for the frontend to use
 const getImages = async (req, res) => {
   // Decoding user's username from the token
@@ -35,29 +35,29 @@ const getImages = async (req, res) => {
       .send({ message: "Not logged in. Please Login again" })
   }
 
+  console.log("")
+
   try {
-    const images = await Image.find()
+    let images = await Image.find()
 
-    // Loop through images and add isOwned field
-    images.forEach(async (image) => {
-      if (image.owner_id.toString() === userId.toString()) {
-        image.isOwned = true
-      } else {
-        image.isOwned = false
-      }
-      //add the profileIcon to the image objects
-      const profileIcon = await User.findOne()
-        .where("_id")
-        .equals(image.owner_id)
-        .select("profileIcon")
-        .exec()
+    // Modify each image
+    const modifiedImages = await Promise.all(
+      images.map(async (image) => {
+        // Add isOwner field
+        let newImageObject = { ...image }
+        newImageObject.isOwner = image.owner_id.toString() == userId._id.toString()
 
-        image.profileIcon = profileIcon
-    })
+        // Fetch profileIcon from User model
+        const user = await User.findById(image.owner_id).select("profileIcon")
+        newImageObject.profileIcon = user ? user.profileIcon : null
 
-    console.log("images", images)
+        console.log(52, newImageObject)
 
-    return res.status(200).send({ images })
+        return newImageObject
+      })
+    )
+
+    return res.status(200).send({ images: modifiedImages })
   } catch (e) {
     console.log(e)
     return res.status(500).json({ message: "Service Error" })
@@ -138,7 +138,7 @@ const deleteImage = async (req, res) => {
       .where("_id")
       .equals(imageId)
       .where("owner_id")
-      .equals(userId)
+      .equals(userId._id)
       .exec()
 
     //Not allowed to delete unless valid image id and user is owner
@@ -201,7 +201,7 @@ const likeImage = async (req, res) => {
     }
 
     //Ensures that users do not like their own images
-    if (Image.owner_id == userId) {
+    if (Image.owner_id.toString() == userId._id.toString()) {
       return res.status(401).json({ error: "Unauthorized Like of Own image" })
     }
 
