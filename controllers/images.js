@@ -51,8 +51,6 @@ const getImages = async (req, res) => {
         const user = await User.findById(image.owner_id).select("profileIcon")
         newImageObject.profileIcon = user ? user.profileIcon : null
 
-        console.log(52, newImageObject)
-
         return newImageObject
       })
     )
@@ -209,7 +207,12 @@ const likeImage = async (req, res) => {
     //liked_by field has the token of the one who liked it
     Image["liked_by"] = req.headers["x-access-token"]
 
-    //TODO: Also need to increment the score of the current user by 1
+    //Increment the score of the owner of the liked image by 1
+    const owner = await User.findOneAndUpdate(
+        { _id: image.owner_id },
+        { $inc: { score: 1 } }
+    )
+
     await Image.save()
     res.status(200).send({ message: "success" })
   } catch (e) {
