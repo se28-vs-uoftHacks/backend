@@ -50,7 +50,7 @@ const getImages = async (req, res) => {
 
         // Fetch profileIcon from User model
         const user = await User.findById(image.owner_id).select("profileIcon")
-        newImageObject.profileIcon = user ? user.profileIcon : null
+        newImageObject.profileIcon = user ? user.profileIcon : 0
 
         return newImageObject
       })
@@ -172,6 +172,8 @@ const deleteImage = async (req, res) => {
 // On the frontend: Disable the like button if the user is the owner of the
 // image and only allow users to like an image once
 const likeImage = async (req, res) => {
+
+
   const decoded = jwt.decode(
     req.headers["x-access-token"],
     process.env.JWT_SECRET
@@ -187,15 +189,17 @@ const likeImage = async (req, res) => {
 
   const { imageId } = req.params
 
+  console.log("imageId", imageId)
+
   if (!imageId) {
     return res.status(401).json({ error: "No Item Selected" })
   }
 
   try {
-    let Image = await Image.findOne().where("_id").equals(imageId).exec()
+    let image = await Image.findOne().where("_id").equals(imageId).exec()
 
     //Ensures that users do not like their own images
-    if (Image.owner_id.toString() == userId._id.toString()) {
+    if (image.owner_id.toString() == userId._id.toString()) {
       return res.status(401).json({ error: "Unauthorized Like of Own image" })
     }
 
@@ -243,17 +247,19 @@ const unlikeImage = async (req, res) => {
 
   const { imageId } = req.params
 
+  console.log("imageId", imageId)
+
   if (!imageId) {
     return res.status(401).json({ error: "No Item Selected" })
   }
 
   try {
-    let Image = await Image.findOne().where("_id").equals(imageId).exec()
+    let image = await Image.findOne().where("_id").equals(imageId).exec()
 
-    //Ensures that users do not unlike their own images
-    if (Image.owner_id.toString() == userId._id.toString()) {
-      return res.status(401).json({ error: "Unauthorized Like of Own image" })
-    }
+    //Ensures that users do not like their own images
+    if (image.owner_id.toString() == userId._id.toString()) {
+        return res.status(401).json({ error: "Unauthorized Like of Own image" })
+      }
 
     //To decrement the likes of the image by 1
     let updatedImage = await Image.findOneAndUpdate(
